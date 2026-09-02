@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  # ── NextGen Code Reviewer API + Frontend ────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/reviewer.db
+      - JWT_SECRET=change-me-to-a-random-secret-in-production
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3
+      - OLLAMA_TIMEOUT=120
+      - MAX_CODE_LENGTH=50000
+    volumes:
+      - app-data:/app/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # ── Ollama LLM Server ──────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    # Uncomment the following for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  app-data:
+  ollama-data:

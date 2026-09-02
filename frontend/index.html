@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NextGen Code Reviewer — AI-powered 24/7 code review with multi-language support, intelligent feedback, and historical learning.">
+    <title>NextGen Code Reviewer — AI-Powered Code Intelligence</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  TOAST NOTIFICATION CONTAINER                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  AUTH VIEW                                                         -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="view-auth" class="view active">
+        <div class="auth-wrapper">
+            <div class="auth-card glass-panel">
+                <!-- Animated background orbs -->
+                <div class="orb orb-1"></div>
+                <div class="orb orb-2"></div>
+                <div class="orb orb-3"></div>
+
+                <div class="auth-header">
+                    <div class="logo">
+                        <span class="logo-icon">⚡</span>
+                        <h1>NextGen Reviewer</h1>
+                    </div>
+                    <p class="subtitle">AI-Powered Code Intelligence</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="form-login" class="auth-form">
+                    <div class="input-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" placeholder="Enter your username" required autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" id="btn-login" class="btn btn-primary btn-full">
+                        <span class="btn-text">Sign In</span>
+                        <span class="btn-loader"></span>
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="form-register" class="auth-form hidden">
+                    <div class="input-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" placeholder="Choose a username" required minlength="3" autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" placeholder="Choose a password (min 6 chars)" required minlength="6" autocomplete="new-password">
+                    </div>
+                    <button type="submit" id="btn-register" class="btn btn-primary btn-full">
+                        <span class="btn-text">Create Account</span>
+                        <span class="btn-loader"></span>
+                    </button>
+                </form>
+
+                <div class="auth-toggle">
+                    <span id="auth-toggle-text">Don't have an account?</span>
+                    <button id="btn-toggle-auth" class="btn-link">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  MAIN APP SHELL                                                    -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <section id="view-app" class="view">
+        <!-- Navigation -->
+        <nav id="main-nav" class="main-nav glass-panel">
+            <div class="nav-brand">
+                <span class="logo-icon">⚡</span>
+                <span class="nav-title">NextGen Reviewer</span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" data-view="reviewer" id="nav-reviewer">
+                    <span class="nav-icon">🔍</span>
+                    <span>Reviewer</span>
+                </button>
+                <button class="nav-btn" data-view="history" id="nav-history">
+                    <span class="nav-icon">📋</span>
+                    <span>History</span>
+                </button>
+                <button class="nav-btn" data-view="rules" id="nav-rules">
+                    <span class="nav-icon">📚</span>
+                    <span>Rules</span>
+                </button>
+                <button class="nav-btn" data-view="dashboard" id="nav-dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </button>
+            </div>
+            <div class="nav-user">
+                <span id="nav-username" class="nav-username"></span>
+                <button id="btn-logout" class="btn btn-ghost btn-sm">Logout</button>
+            </div>
+        </nav>
+
+        <!-- App Content Container -->
+        <main class="app-content">
+
+            <!-- ─── REVIEWER TAB ──────────────────────────────────────── -->
+            <div id="tab-reviewer" class="tab-panel active">
+                <div class="section-header">
+                    <h2>Code Review</h2>
+                    <p>Submit your code for AI-powered intelligent analysis</p>
+                </div>
+
+                <div class="reviewer-grid">
+                    <!-- Code Input -->
+                    <div class="code-input-panel glass-panel">
+                        <div class="panel-header">
+                            <h3>Source Code</h3>
+                            <div class="language-select-wrapper">
+                                <select id="language-select" class="language-select">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="go">Go</option>
+                                    <option value="rust">Rust</option>
+                                    <option value="c++">C++</option>
+                                    <option value="c#">C#</option>
+                                    <option value="ruby">Ruby</option>
+                                    <option value="php">PHP</option>
+                                </select>
+                            </div>
+                        </div>
+                        <textarea id="code-input" class="code-editor" placeholder="Paste your code here..." spellcheck="false"></textarea>
+                        <div class="panel-footer">
+                            <span id="char-count" class="char-count">0 / 50,000 chars</span>
+                            <button id="btn-submit-code" class="btn btn-primary">
+                                <span class="btn-text">🚀 Analyze Code</span>
+                                <span class="btn-loader"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Review Results -->
+                    <div id="review-results" class="review-results-panel glass-panel hidden">
+                        <div class="panel-header">
+                            <h3>Review Results</h3>
+                            <div id="rating-badge" class="rating-badge">
+                                <span id="rating-value">—</span>
+                                <span class="rating-label">/ 10</span>
+                            </div>
+                        </div>
+
+                        <div class="result-section">
+                            <h4>📝 Feedback</h4>
+                            <p id="review-feedback" class="feedback-text"></p>
+                        </div>
+
+                        <div class="result-section">
+                            <h4>⚠️ Issues Found</h4>
+                            <div id="issues-list" class="issues-list"></div>
+                        </div>
+
+                        <div class="result-section">
+                            <h4>💻 Code Preview</h4>
+                            <pre id="code-preview" class="code-preview"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── HISTORY TAB ───────────────────────────────────────── -->
+            <div id="tab-history" class="tab-panel">
+                <div class="section-header">
+                    <h2>Review History</h2>
+                    <p>Your past code review submissions</p>
+                </div>
+                <div id="history-list" class="history-list">
+                    <div class="empty-state">
+                        <span class="empty-icon">📭</span>
+                        <p>No submissions yet. Submit your first code review!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── RULES TAB ─────────────────────────────────────────── -->
+            <div id="tab-rules" class="tab-panel">
+                <div class="section-header">
+                    <h2>Quality Rules</h2>
+                    <p>Upload and manage historical review rules from CSV</p>
+                </div>
+
+                <div class="rules-grid">
+                    <!-- Upload Panel -->
+                    <div class="upload-panel glass-panel">
+                        <h3>Import Rules</h3>
+                        <p class="upload-desc">Upload a CSV file with columns: <code>id, type, description</code></p>
+                        <div id="drop-zone" class="drop-zone">
+                            <span class="drop-icon">📁</span>
+                            <p>Drag & drop CSV file here</p>
+                            <p class="drop-or">or</p>
+                            <label for="csv-file-input" class="btn btn-outline btn-sm">Browse Files</label>
+                            <input type="file" id="csv-file-input" accept=".csv" hidden>
+                        </div>
+                        <div id="upload-status" class="upload-status hidden"></div>
+                    </div>
+
+                    <!-- Rules List -->
+                    <div class="rules-list-panel glass-panel">
+                        <div class="panel-header">
+                            <h3>Active Rules</h3>
+                            <span id="rules-count" class="badge">0</span>
+                        </div>
+                        <div id="rules-list" class="rules-list">
+                            <div class="empty-state">
+                                <span class="empty-icon">📋</span>
+                                <p>No rules imported yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── DASHBOARD TAB ─────────────────────────────────────── -->
+            <div id="tab-dashboard" class="tab-panel">
+                <div class="section-header">
+                    <h2>Dashboard</h2>
+                    <p>Your code review analytics at a glance</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total Reviews</div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-value" id="stat-avg-rating">—</div>
+                        <div class="stat-label">Average Rating</div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-value" id="stat-growth">—</div>
+                        <div class="stat-label">Growth Score</div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-value" id="stat-rules">0</div>
+                        <div class="stat-label">Active Rules</div>
+                    </div>
+                </div>
+
+                <!-- Language breakdown -->
+                <div class="dashboard-panel glass-panel">
+                    <h3>Language Breakdown</h3>
+                    <div id="lang-breakdown" class="lang-breakdown">
+                        <div class="empty-state">
+                            <span class="empty-icon">🌐</span>
+                            <p>Submit some reviews to see language stats</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent activity -->
+                <div class="dashboard-panel glass-panel">
+                    <h3>Recent Activity</h3>
+                    <div id="recent-activity" class="recent-activity">
+                        <div class="empty-state">
+                            <span class="empty-icon">🕐</span>
+                            <p>No recent activity</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </section>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/reviewer.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/rules.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
