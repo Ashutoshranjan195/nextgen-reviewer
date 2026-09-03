@@ -9,17 +9,23 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Add a non-root user
+RUN useradd -m -d /app -s /bin/bash appuser
 
 # Install Python dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY backend/ ./backend/
-COPY frontend/ ./frontend/
+COPY --chown=appuser:appuser backend/ ./backend/
+COPY --chown=appuser:appuser frontend/ ./frontend/
 
-# Expose port
+# Switch to non-root user
+USER appuser
+
 EXPOSE 8000
 
 # Run the application

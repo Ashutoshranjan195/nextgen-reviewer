@@ -5,6 +5,7 @@ Rules routes — CSV upload and rules retrieval.
 import csv
 import io
 import logging
+import asyncio
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
@@ -23,6 +24,21 @@ router = APIRouter(prefix="/api", tags=["rules"])
 REQUIRED_COLUMNS = {"id", "type", "description"}
 
 
+def parse_csv_sync(text: str):
+    """Synchronous CPU-bound CSV parsing to be run in a thread pool."""
+    reader = csv.DictReader(io.StringIO(text))
+    if reader.fieldnames is None:
+        raise ValueError("CSV file is empty or has no headers")
+
+    actual_columns = {col.strip().lower() for col in reader.fieldnames}
+    missing = REQUIRED_COLUMNS - actual_columns
+    if missing:
+        raise ValueError(f"CSV is missing required columns: {', '.join(sorted(missing))}")
+
+    # Return a list of parsed rows so we don't keep the file object open across threads
+    return list(reader)
+
+
 @router.post("/upload-csv", response_model=UploadResponse)
 async def upload_csv(
     file: UploadFile = File(...),
@@ -31,69 +47,42 @@ async def upload_csv(
 ):
     """
     Upload a CSV file containing historical review rules.
-
-    Expected CSV schema: id, type, description
-    - Validates column headers.
-    - Skips invalid rows (missing type or description).
-    - Associates imported rules with the authenticated user.
     """
-    # ── Validate file type ────────────────────────────────────────────────
     if file.content_type and "csv" not in file.content_type and "text" not in file.content_type:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File must be a CSV",
         )
 
-    # ── Read and decode ───────────────────────────────────────────────────
     try:
         raw = await file.read()
-        text = raw.decode("utf-8-sig")  # Handle BOM
+        text = raw.decode("utf-8-sig") 
     except UnicodeDecodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File must be UTF-8 encoded",
         )
 
-    # ── Parse CSV ─────────────────────────────────────────────────────────
-    reader = csv.DictReader(io.StringIO(text))
+    # Offload the blocking CSV parsing to a thread pool
+    try:
+        parsed_rows = await asyncio.to_thread(parse_csv_sync, text)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    if reader.fieldnames is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="CSV file is empty or has no headers",
-        )
-
-    # Normalize header names (strip whitespace, lowercase for comparison)
-    actual_columns = {col.strip().lower() for col in reader.fieldnames}
-    missing = REQUIRED_COLUMNS - actual_columns
-    if missing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"CSV is missing required columns: {', '.join(sorted(missing))}",
-        )
-
-    # ── Import rules ──────────────────────────────────────────────────────
     imported = 0
     skipped = 0
 
-    for row_num, row in enumerate(reader, start=2):  # Start at 2 (row 1 = header)
-        # Normalize keys
+    for row_num, row in enumerate(parsed_rows, start=2):
         normalized = {k.strip().lower(): v.strip() if v else "" for k, v in row.items()}
-
         rule_type = normalized.get("type", "").strip()
         description = normalized.get("description", "").strip()
 
-        # Skip rows with empty type or description
         if not rule_type or not description:
             skipped += 1
             logger.debug("Skipping row %d: missing type or description", row_num)
             continue
 
-        rule = Rule(
-            user_id=user.id,
-            type=rule_type,
-            description=description,
-        )
+        rule = Rule(user_id=user.id, type=rule_type, description=description)
         db.add(rule)
         imported += 1
 
@@ -115,7 +104,6 @@ async def get_rules(
 ):
     """
     Get all review rules available to the user.
-    Includes both user-specific rules and global rules (user_id IS NULL).
     """
     result = await db.execute(
         select(Rule)
@@ -125,9 +113,6 @@ async def get_rules(
     rules = result.scalars().all()
 
     return RulesResponse(
-        rules=[
-            RuleOut(id=r.id, type=r.type, description=r.description)
-            for r in rules
-        ],
+        rules=[RuleOut(id=r.id, type=r.type, description=r.description) for r in rules],
         count=len(rules),
     )

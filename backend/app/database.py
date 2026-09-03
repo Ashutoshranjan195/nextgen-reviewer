@@ -12,7 +12,6 @@ from app.config import settings
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
-    connect_args={"check_same_thread": False}  # SQLite-specific
 )
 
 async_session = async_sessionmaker(
@@ -45,7 +44,5 @@ async def get_db() -> AsyncSession:
 # ── Init ──────────────────────────────────────────────────────────────────────
 
 async def init_db():
-    """Create all tables (runs once on application startup)."""
-    async with engine.begin() as conn:
-        from app.models import User, Submission, Rule, FailedLoginAttempt  # noqa: F401
-        await conn.run_sync(Base.metadata.create_all)
+    """Database startup logic. Tables are now managed by Alembic."""
+    pass

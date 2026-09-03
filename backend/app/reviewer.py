@@ -17,6 +17,16 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+# ─────────────────────────────────────────────────────────────────────────────
+#  Ruthless LLM System Prompt
+# ─────────────────────────────────────────────────────────────────────────────
+RUTHLESS_SYSTEM_PROMPT = """
+You are a Ruthless Senior Architect and code reviewer. 
+Do not give a perfect score easily. Search hard for logic bugs, security vulnerabilities, and bad practices. 
+If the code is simple or has minor issues, score it between 5 and 7. 
+Only give 9-10 if it is flawless enterprise-grade architecture.
+"""
+
 # Allowed issue types — anything else maps to "other"
 VALID_ISSUE_TYPES = {
     "formatting", "performance", "security",
@@ -848,6 +858,17 @@ async def generate_review(
     Returns:
         A ReviewResult with rating, feedback, and issues.
     """
+    # ── Strict Input Validation ───────────────────────────────────────────────
+    # Simple heuristic to detect if the input is actually code
+    code_chars = set("{}()[]<>;=+-*/%")
+    keywords = {"def", "class", "function", "import", "const", "let", "var", "public", "void", "if", "else", "return", "#include"}
+    
+    char_density = sum(1 for c in code if c in code_chars) / max(1, len(code))
+    word_match = any(kw in code for kw in keywords)
+    
+    if char_density < 0.05 and not word_match:
+        raise ValueError("Invalid input: Not recognized as code")
+
     csv_rules = rules or []
 
     # Step 1: Run built-in regex rules
@@ -870,6 +891,10 @@ async def generate_review(
 
     # Step 5: Calculate rating
     rating = _calculate_rating(all_issues, code)
+
+    # Apply strict penalty if no rules are active
+    if len(csv_rules) == 0:
+        rating = min(rating, 5)
 
     # Step 6: Generate feedback
     feedback = _generate_feedback(rating, all_issues, language, code)

@@ -9,16 +9,35 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:///./data/reviewer.db
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/reviewer_db
       - JWT_SECRET=change-me-to-a-random-secret-in-production
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=llama3
       - OLLAMA_TIMEOUT=120
       - MAX_CODE_LENGTH=50000
-    volumes:
-      - app-data:/app/data
     depends_on:
-      - ollama
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+
+  # ── PostgreSQL Database ────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: reviewer_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # ── Ollama LLM Server ──────────────────────────────────────────────────
@@ -29,15 +48,7 @@ services:
     volumes:
       - ollama-data:/root/.ollama
     restart: unless-stopped
-    # Uncomment the following for GPU support:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
 
 volumes:
-  app-data:
+  postgres-data:
   ollama-data:
