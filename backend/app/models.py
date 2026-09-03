@@ -4,7 +4,7 @@ ORM models — User, Submission, Rule.
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, JSON, Index, Index
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -62,3 +62,20 @@ class Rule(Base):
 
     def __repr__(self):
         return f"<Rule id={self.id} type={self.type!r}>"
+
+
+class FailedLoginAttempt(Base):
+    """Tracks failed login attempts for IP-based rate limiting."""
+    __tablename__ = "failed_login_attempts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ip_address = Column(String(45), nullable=False, index=True)
+    username_attempted = Column(String(150), nullable=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("ix_failed_login_attempts_ip_timestamp", "ip_address", "timestamp"),
+    )
+
+    def __repr__(self):
+        return f"<FailedLoginAttempt id={self.id} ip={self.ip_address} time={self.timestamp}>"

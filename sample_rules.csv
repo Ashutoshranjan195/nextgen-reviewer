@@ -1,0 +1,7 @@
+id,type,description
+1,formatting,Ensure all Python functions are typed.
+2,performance,Avoid using list comprehensions for purely side-effect operations.
+3,security,Never hardcode secrets or API keys in the source code; use environment variables instead.
+4,best-practice,Add docstrings to all public methods and classes.
+5,optimization,Use generators instead of lists when returning large sequences of data.
+6,other,Remove commented-out code before merging.
